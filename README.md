@@ -8,7 +8,7 @@
 
 <sub>by <a href="https://nowdigiverse.com">Nowdigiverse</a></sub>
 
-Revive an old smart TV or Android TV box with a modern **ExoPlayer / Media3** engine, **M3U playlist** support, category tabs, and automatic dead‑channel filtering — in a **590 KB** APK.
+Revive an old smart TV or Android TV box with a modern **ExoPlayer / Media3** engine, **M3U playlist** support, category tabs, and automatic dead‑channel filtering — **150+ free‑to‑air Pakistani, Indian, sports and kids channels** built in, in a tiny **~640 KB** APK.
 
 <br>
 
@@ -16,7 +16,8 @@ Revive an old smart TV or Android TV box with a modern **ExoPlayer / Media3** en
 ![minSdk](https://img.shields.io/badge/minSdk-19%20(KitKat%204.4)-orange)
 ![Player](https://img.shields.io/badge/Player-Media3%20ExoPlayer%201.4-blue)
 ![Language](https://img.shields.io/badge/Language-Java-red)
-![APK size](https://img.shields.io/badge/APK-590%20KB-brightgreen)
+![APK size](https://img.shields.io/badge/APK-~640%20KB-brightgreen)
+![Channels](https://img.shields.io/badge/Channels-150%2B%20FTA-ff69b4)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 </div>
@@ -43,7 +44,7 @@ Even **VLC** struggles on these devices — it crashes on many live HLS streams,
 
 **TV Channels** fixes all of that in one small, remote‑friendly app, so a 2015‑era TV can stream live channels again.
 
-> ⚠️ This app ships with a short list of **free, publicly available** demo streams and loads **your own M3U playlists**. It is a *player* only — it hosts no content and is **not affiliated with any channel or broadcaster**. Use only streams you are legally allowed to access.
+> ⚠️ This app ships with **150+ free‑to‑air, publicly available** streams (Pakistani, Indian, sports and kids channels, indexed by the open [iptv‑org](https://github.com/iptv-org/iptv) project) and also loads **your own M3U playlists**. It is a *player* only — it hosts no content and is **not affiliated with any channel or broadcaster**. Streams come and go; dead ones are hidden automatically. Use only streams you are legally allowed to access.
 
 ---
 

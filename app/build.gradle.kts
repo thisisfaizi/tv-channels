@@ -10,8 +10,8 @@ android {
         applicationId = "com.faizi.tvchannels"
         minSdk = 19
         targetSdk = 28
-        versionCode = 6
-        versionName = "1.5"
+        versionCode = 7
+        versionName = "1.6"
     }
 
     buildTypes {
