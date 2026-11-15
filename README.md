@@ -19,6 +19,18 @@ Revive an old smart TV or Android TV box with a modern **ExoPlayer / Media3** en
 
 ---
 
+## 🤖 Easiest install — just ask Claude
+
+**No Android skills needed.** If you use **[Claude Code](https://claude.com/claude-code)**, point it at this repo and let it do the whole job — clone, build, and install the app straight onto your TV over your network:
+
+> 💬 **“Clone `https://github.com/thisisfaizi/tv-channels`, build it, and install the app on my Android TV at `<TV_IP>`.”**
+
+Claude sets up the SDK, builds the APK, and installs it via ADB — the channel app just appears on your TV. 🎉
+
+<sub>Prefer to do it yourself? Grab the ready‑made [**APK from Releases**](https://github.com/thisisfaizi/tv-channels/releases/latest) or follow [Build from source](#️-build-from-source).</sub>
+
+---
+
 ## 🎯 Why this exists
 
 Old smart TVs and Android TV boxes (CVTE, HiSilicon, and similar **Android 4.4 KitKat** devices) are stranded: **they can't be upgraded**, the Play Store is dead or empty, Netflix/YouTube apps refuse to install, and modern IPTV players require Android 8+.
@@ -50,6 +62,20 @@ Even **VLC** struggles on these devices — it crashes on many live HLS streams,
 &nbsp;
 <img src="screenshots/kids-tab.png" alt="Kids category tab filtering live cartoon channels" width="48%">
 </div>
+
+---
+
+## 🆚 TV Channels vs VLC on Android 4.4
+
+| | VLC on KitKat | **TV Channels** |
+|---|:---:|:---:|
+| Live HLS (`.m3u8`) streams | ❌ crashes on many | ✅ plays smoothly |
+| Certificate pop‑ups | ❌ on every channel | ✅ none |
+| UA‑blocked channels (HTTP 403) | ❌ blocked | ✅ works |
+| Category tabs | ❌ | ✅ |
+| Auto‑hide dead channels | ❌ | ✅ |
+| Video quality toggle | manual | ✅ Low / Auto / High |
+| App size | ~48 MB | ✅ **~0.6 MB** |
 
 ---
 
