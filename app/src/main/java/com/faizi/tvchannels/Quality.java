@@ -39,9 +39,15 @@ public final class Quality {
                 .clearVideoSizeConstraints()
                 .setMaxVideoBitrate(Integer.MAX_VALUE);
         switch (q) {
-            case 0: b.setForceLowestBitrate(true); break;            // Low
-            case 1: break;                                           // Auto (adaptive)
-            case 2: b.setForceHighestSupportedBitrate(true); break;  // High
+            case 0: // Low — smoothest on weak links: lowest variant, cap at 360p
+                b.setForceLowestBitrate(true).setMaxVideoSize(640, 360);
+                break;
+            case 1: // Auto — adaptive, capped at 480p so it never overreaches
+                b.setMaxVideoSize(854, 480);
+                break;
+            case 2: // High — unlimited
+                b.setForceHighestSupportedBitrate(true);
+                break;
         }
         ts.setParameters(b.build());
     }

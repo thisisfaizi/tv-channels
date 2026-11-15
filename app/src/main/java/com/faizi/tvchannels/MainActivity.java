@@ -220,10 +220,10 @@ public class MainActivity extends Activity {
         for (Channel c : all) {
             if (status.get(c.url) == ChannelStatus.UNKNOWN) todo.add(c);
         }
-        if (todo.isEmpty()) { setTitle("TV Channels"); return; }
+        if (todo.isEmpty()) { setTitle("NDV TV"); return; }
 
         final AtomicInteger remaining = new AtomicInteger(todo.size());
-        setTitle("TV Channels  —  checking " + remaining.get() + "…");
+        setTitle("NDV TV  —  checking " + remaining.get() + "…");
         probePool = Executors.newFixedThreadPool(6);
         for (final Channel c : todo) {
             probePool.submit(new Runnable() {
@@ -234,7 +234,7 @@ public class MainActivity extends Activity {
                     runOnUiThread(new Runnable() {
                         @Override public void run() {
                             if (!ok) refilter();     // drop dead ones as we find them
-                            setTitle(left > 0 ? "TV Channels  —  checking " + left + "…"
+                            setTitle(left > 0 ? "NDV TV  —  checking " + left + "…"
                                               : "TV Channels");
                         }
                     });

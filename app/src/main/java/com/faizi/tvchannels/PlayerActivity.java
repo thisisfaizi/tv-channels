@@ -17,6 +17,7 @@ import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.common.util.UnstableApi;
 import androidx.media3.datasource.DefaultHttpDataSource;
+import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.hls.HlsMediaSource;
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
@@ -72,8 +73,18 @@ public class PlayerActivity extends Activity {
         trackSelector = new DefaultTrackSelector(this);
         Quality.apply(trackSelector, Quality.get(this));
 
+        // Bigger buffer runway = fewer, shorter stalls on weak/variable links.
+        DefaultLoadControl loadControl = new DefaultLoadControl.Builder()
+                .setBufferDurationsMs(
+                        30_000,  // min buffer
+                        60_000,  // max buffer
+                        3_000,   // buffer before playback starts
+                        6_000)   // buffer required after a rebuffer
+                .build();
+
         player = new ExoPlayer.Builder(this)
                 .setTrackSelector(trackSelector)
+                .setLoadControl(loadControl)
                 .build();
         player.setVideoSurfaceView(surface);
 

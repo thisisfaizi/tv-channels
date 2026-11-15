@@ -1,8 +1,12 @@
 <div align="center">
 
-# 📺 TV Channels — Lightweight IPTV Player for Old Android TVs
+<img src="docs/logo.png" alt="NDV TV by Nowdigiverse" width="150">
+
+# 📺 NDV TV — Lightweight IPTV Player for Old Android TVs
 
 ### A tiny, fast live‑TV & IPTV app that actually runs on **Android 4.4 KitKat** (API 19)
+
+<sub>by <a href="https://nowdigiverse.com">Nowdigiverse</a></sub>
 
 Revive an old smart TV or Android TV box with a modern **ExoPlayer / Media3** engine, **M3U playlist** support, category tabs, and automatic dead‑channel filtering — in a **590 KB** APK.
 
@@ -65,9 +69,9 @@ Even **VLC** struggles on these devices — it crashes on many live HLS streams,
 
 ---
 
-## 🆚 TV Channels vs VLC on Android 4.4
+## 🆚 NDV TV vs VLC on Android 4.4
 
-| | VLC on KitKat | **TV Channels** |
+| | VLC on KitKat | **NDV TV** |
 |---|:---:|:---:|
 | Live HLS (`.m3u8`) streams | ❌ crashes on many | ✅ plays smoothly |
 | Certificate pop‑ups | ❌ on every channel | ✅ none |

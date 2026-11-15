@@ -10,8 +10,9 @@
 
     <application
         android:allowBackup="true"
-        android:label="TV Channels"
-        android:banner="@android:color/black"
+        android:label="NDV TV"
+        android:icon="@mipmap/ic_launcher"
+        android:banner="@drawable/banner"
         android:usesCleartextTraffic="true"
         android:hardwareAccelerated="true"
         android:theme="@android:style/Theme.Holo">
