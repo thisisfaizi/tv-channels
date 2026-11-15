@@ -17,10 +17,18 @@ public class ChannelStatus {
     private static final long BAD_TTL = 6L * 3600 * 1000;      // 6 hours
     private static final long OK_TTL = 24L * 3600 * 1000;      // 1 day
 
+    // Bump when probe/error semantics change so old (possibly wrong) marks are cleared once.
+    private static final int SCHEMA = 2;
+
     private final SharedPreferences prefs;
 
     public ChannelStatus(Context ctx) {
         prefs = ctx.getSharedPreferences("channel_status", Context.MODE_PRIVATE);
+        if (prefs.getInt("schema", 0) != SCHEMA) {
+            // v1.6 and earlier wrongly marked good channels BAD on timeouts/stalls.
+            // Wipe the cache once so everyone starts clean after upgrading.
+            prefs.edit().clear().putInt("schema", SCHEMA).apply();
+        }
     }
 
     private static String key(String url) {

@@ -103,8 +103,25 @@ public class MainActivity extends Activity {
         refilter();
         // Start focus on the tab bar so the remote's Left/Right switch categories immediately.
         if (tabsRow.getChildCount() > 0) tabsRow.getChildAt(0).requestFocus();
+    }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Re-check anything still unknown. Runs on return from the player too.
+        if (adapter != null) refilter();
         startProbing();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // CRITICAL: stop probing while a channel plays, so dozens of background
+        // HTTPS requests don't starve the stream of the little bandwidth there is.
+        if (probePool != null) {
+            probePool.shutdownNow();
+            probePool = null;
+        }
     }
 
     @Override
@@ -216,6 +233,8 @@ public class MainActivity extends Activity {
     // ---- background liveness probe ----
 
     private void startProbing() {
+        if (probePool != null && !probePool.isShutdown()) return;   // already running
+
         final List<Channel> todo = new ArrayList<>();
         for (Channel c : all) {
             if (status.get(c.url) == ChannelStatus.UNKNOWN) todo.add(c);
@@ -224,18 +243,18 @@ public class MainActivity extends Activity {
 
         final AtomicInteger remaining = new AtomicInteger(todo.size());
         setTitle("NDV TV  —  checking " + remaining.get() + "…");
-        probePool = Executors.newFixedThreadPool(6);
+        // Only 2 threads: gentle on a weak link and on 512 MB of RAM.
+        probePool = Executors.newFixedThreadPool(2);
         for (final Channel c : todo) {
             probePool.submit(new Runnable() {
                 @Override public void run() {
-                    final boolean ok = Reachability.check(c.url);
-                    status.set(c.url, ok ? ChannelStatus.OK : ChannelStatus.BAD);
+                    final int st = Reachability.check(c.url);   // OK / BAD / UNKNOWN
+                    if (st != ChannelStatus.UNKNOWN) status.set(c.url, st);
                     final int left = remaining.decrementAndGet();
                     runOnUiThread(new Runnable() {
                         @Override public void run() {
-                            if (!ok) refilter();     // drop dead ones as we find them
-                            setTitle(left > 0 ? "NDV TV  —  checking " + left + "…"
-                                              : "TV Channels");
+                            if (st == ChannelStatus.BAD) refilter();   // drop only the truly dead
+                            setTitle(left > 0 ? "NDV TV  —  checking " + left + "…" : "NDV TV");
                         }
                     });
                 }

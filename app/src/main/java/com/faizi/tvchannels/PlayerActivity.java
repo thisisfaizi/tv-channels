@@ -3,6 +3,8 @@ package com.faizi.tvchannels;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.SurfaceView;
@@ -21,6 +23,7 @@ import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.hls.HlsMediaSource;
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector;
+import androidx.media3.exoplayer.upstream.DefaultLoadErrorHandlingPolicy;
 
 @OptIn(markerClass = UnstableApi.class)
 public class PlayerActivity extends Activity {
@@ -37,7 +40,14 @@ public class PlayerActivity extends Activity {
     private TextView status;
     private ChannelStatus statusStore;
     private String url;
+    private String name;
     private DefaultTrackSelector trackSelector;
+
+    private final Handler handler = new Handler();
+    private boolean everReady;   // stream actually rendered at least once
+    private boolean done;        // we've decided to give up and leave
+    private int retries;
+    private static final int MAX_RETRIES = 5;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +55,7 @@ public class PlayerActivity extends Activity {
 
         statusStore = new ChannelStatus(this);
         url = getIntent().getStringExtra(EXTRA_URL);
-        String name = getIntent().getStringExtra(EXTRA_NAME);
+        name = getIntent().getStringExtra(EXTRA_NAME);
 
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(Color.BLACK);
@@ -88,13 +98,17 @@ public class PlayerActivity extends Activity {
                 .build();
         player.setVideoSurfaceView(surface);
 
+        // Retry transient segment/load errors several times before surfacing a fatal error.
         HlsMediaSource source = new HlsMediaSource.Factory(http)
+                .setLoadErrorHandlingPolicy(new DefaultLoadErrorHandlingPolicy(6))
                 .createMediaSource(MediaItem.fromUri(url));
 
         player.addListener(new Player.Listener() {
             @Override
             public void onPlaybackStateChanged(int state) {
                 if (state == Player.STATE_READY) {
+                    everReady = true;
+                    retries = 0;                               // recovered cleanly
                     status.setVisibility(View.GONE);
                     if (url != null) statusStore.setOk(url);   // confirmed playable
                 } else if (state == Player.STATE_BUFFERING) {
@@ -105,20 +119,79 @@ public class PlayerActivity extends Activity {
 
             @Override
             public void onPlayerError(PlaybackException error) {
-                if (url != null) statusStore.setBad(url);       // remember failure -> auto-hidden
-                String msg = "Can't play this channel.\nIt will be hidden from the list.";
-                status.setVisibility(View.VISIBLE);
-                status.setText(msg);
-                Toast.makeText(PlayerActivity.this, msg, Toast.LENGTH_LONG).show();
-                status.postDelayed(new Runnable() {
-                    @Override public void run() { finish(); }
-                }, 2500);
+                handlePlayerError(error);
             }
         });
 
         player.setMediaSource(source);
         player.prepare();
         player.setPlayWhenReady(true);
+    }
+
+    /**
+     * A playback error here does NOT mean the channel is dead. On a weak/variable
+     * link the buffer drains and ExoPlayer raises a transient load error — that is a
+     * bandwidth problem, not a broken stream. So we:
+     *   - retry (re-prepare) several times with a short backoff,
+     *   - only mark a channel BAD (auto-hide) when it's DEFINITIVELY unplayable
+     *     (bad HTTP status / not found / unsupported) AND it never started,
+     *   - never hide a channel that already played, or one that only timed out.
+     */
+    private void handlePlayerError(PlaybackException error) {
+        if (done || player == null) return;
+        int code = error.errorCode;
+        Log.e("NDV", "player error " + error.getErrorCodeName() + " (" + code + ")", error);
+
+        boolean definitive =
+                code == PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS
+             || code == PlaybackException.ERROR_CODE_IO_FILE_NOT_FOUND
+             || code == PlaybackException.ERROR_CODE_IO_INVALID_HTTP_CONTENT_TYPE
+             || code == PlaybackException.ERROR_CODE_PARSING_MANIFEST_MALFORMED
+             || code == PlaybackException.ERROR_CODE_PARSING_MANIFEST_UNSUPPORTED
+             || code == PlaybackException.ERROR_CODE_PARSING_CONTAINER_MALFORMED
+             || code == PlaybackException.ERROR_CODE_PARSING_CONTAINER_UNSUPPORTED
+             || code == PlaybackException.ERROR_CODE_DECODER_INIT_FAILED
+             || code == PlaybackException.ERROR_CODE_DECODING_FORMAT_UNSUPPORTED;
+
+        // Genuinely unplayable and never got going -> hide it from the list.
+        if (definitive && !everReady) {
+            giveUp("Can't play this channel\n(" + error.getErrorCodeName() + ").\nIt will be hidden.", true);
+            return;
+        }
+
+        // Otherwise it's transient / bandwidth -> try to recover.
+        if (retries < MAX_RETRIES) {
+            retries++;
+            status.setVisibility(View.VISIBLE);
+            status.setText("Reconnecting… (" + retries + "/" + MAX_RETRIES + ")");
+            handler.postDelayed(new Runnable() {
+                @Override public void run() {
+                    if (done || player == null) return;
+                    player.seekToDefaultPosition();   // jump to live edge
+                    player.prepare();
+                    player.setPlayWhenReady(true);
+                }
+            }, 1500);
+            return;
+        }
+
+        // Out of retries. If it played before, it's a weak link — keep it in the list.
+        if (everReady) {
+            giveUp("Weak connection — playback stopped.\nTry again, pick Low quality, or use Ethernet.", false);
+        } else {
+            giveUp("Can't reach this channel\n(" + error.getErrorCodeName() + ").", false);
+        }
+    }
+
+    private void giveUp(String msg, boolean hide) {
+        done = true;
+        if (hide && url != null) statusStore.setBad(url);
+        status.setVisibility(View.VISIBLE);
+        status.setText(msg);
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+        handler.postDelayed(new Runnable() {
+            @Override public void run() { finish(); }
+        }, 3000);
     }
 
     @Override
@@ -143,6 +216,7 @@ public class PlayerActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        handler.removeCallbacksAndMessages(null);   // cancel pending retry/finish
         if (player != null) {
             player.release();
             player = null;
